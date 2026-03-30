@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  website     String?
+  industry    String?
+  size        String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  jobs        JobApplication[]
+  insights    CompanyInsight[]
+  contacts    Contact[]
+}
+
+model JobApplication {
+  id             String    @id @default(cuid())
+  companyId      String
+  company        Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  role           String
+  location       String?
+  workType       String?
+  source         String?
+  appliedDate    DateTime?
+  status         String    @default("wishlist")
+  priority       String    @default("medium")
+  salaryMin      Int?
+  salaryMax      Int?
+  salaryCurrency String?   @default("USD")
+  nextAction     String?
+  nextActionDate DateTime?
+  jobUrl         String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  statusHistory   StatusUpdate[]
+  content         JobContent?
+  interviewRounds InterviewRound[]
+  contacts        Contact[]
+  insights        JobInsight?
+  matchSummary    MatchSummary?
+}
+
+model StatusUpdate {
+  id         String         @id @default(cuid())
+  jobId      String
+  job        JobApplication @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  fromStatus String?
+  toStatus   String
+  note       String?
+  createdAt  DateTime       @default(now())
+}
+
+model JobContent {
+  id             String         @id @default(cuid())
+  jobId          String         @unique
+  job            JobApplication @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  rawJD          String?
+  coverLetter    String?
+  recruiterNotes String?
+  prepNotes      String?
+  whyCompany     String?
+  whyRole        String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model InterviewRound {
+  id          String         @id @default(cuid())
+  jobId       String
+  job         JobApplication @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  roundNumber Int
+  roundType   String?
+  scheduledAt DateTime?
+  interviewer String?
+  notes       String?
+  feedback    String?
+  outcome     String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  questions InterviewQuestion[]
+}
+
+model InterviewQuestion {
+  id           String         @id @default(cuid())
+  roundId      String
+  round        InterviewRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  question     String
+  myAnswer     String?
+  improvements String?
+  category     String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Contact {
+  id        String          @id @default(cuid())
+  companyId String?
+  company   Company?        @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  jobId     String?
+  job       JobApplication? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  name      String
+  role      String?
+  email     String?
+  linkedin  String?
+  phone     String?
+  notes     String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model CompanyInsight {
+  id          String   @id @default(cuid())
+  companyId   String   @unique
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  mission     String?
+  values      String?
+  culture     String?
+  positioning String?
+  priorities  String?
+  language    String?
+  rawText     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model JobInsight {
+  id                    String         @id @default(cuid())
+  jobId                 String         @unique
+  job                   JobApplication @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  responsibilities      String?
+  requiredSkills        String?
+  preferredSkills       String?
+  tools                 String?
+  keywords              String?
+  leadershipSignals     String?
+  stakeholderExpected   String?
+  teamClues             String?
+  interviewFocus        String?
+  accessibilityMentions String?
+  researchMentions      String?
+  strategyMentions      String?
+  designSystemsMentions String?
+  peopleManagement      String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+}
+
+model MatchSummary {
+  id                  String         @id @default(cuid())
+  jobId               String         @unique
+  job                 JobApplication @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  strongAlignments    String?
+  likelyGaps          String?
+  storiesToEmphasize  String?
+  recruiterPoints     String?
+  whyYouBasis         String?
+  aboutYourselfBasis  String?
+  prepQuestions       String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model CVProfile {
+  id        String       @id @default(cuid())
+  rawText   String?
+  name      String?
+  email     String?
+  phone     String?
+  summary   String?
+  skills    String?
+  domains   String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  experiences CVExperience[]
+}
+
+model CVExperience {
+  id              String    @id @default(cuid())
+  cvId            String
+  cv              CVProfile @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  company         String
+  role            String
+  startDate       String?
+  endDate         String?
+  responsibilities String?
+  achievements    String?
+  tools           String?
+  domains         String?
+  leadership      String?
+  stakeholders    String?
+  impact          String?
+  stories         String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
